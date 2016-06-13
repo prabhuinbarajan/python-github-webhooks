@@ -35,7 +35,7 @@ from flask import Flask, request, abort
 application = Flask(__name__)
 
 
-@application.route('/', methods=['GET', 'POST'])
+@application.route('/', methods=['GET', 'POST'],strict_slashes=None)
 def index():
     """
     Main WSGI application entry.
@@ -67,6 +67,7 @@ def index():
 
     # Enforce secret
     secret = config.get('enforce_secret', '')
+    st2_secret_key=config.get('st2_secret_key','')
     if secret:
         # Only SHA1 is supported
         header_signature = request.headers.get('X-Hub-Signature')
@@ -163,7 +164,7 @@ def index():
     for s in scripts:
 
         proc = Popen(
-            [s, tmpfile, event],
+            [s, tmpfile, event, request.host, st2_secret_key],
             stdout=PIPE, stderr=PIPE
         )
         stdout, stderr = proc.communicate()

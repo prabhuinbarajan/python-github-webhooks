@@ -1,5 +1,6 @@
 {
-    "github_ips_only": true,
+    "github_ips_only": false,
     "enforce_secret": "",
-    "return_scripts_info": true
+    "return_scripts_info": true,
+    "st2_secret_key": "ZjFkZGYzNGViNTkzZDRkNmY0NDlkMjNiZDc3OGNmMWIyNjBkY2E1NmRiZTRhNDQ0ZjUwMDU2NGFkYTcxMjIyZg"
 }
