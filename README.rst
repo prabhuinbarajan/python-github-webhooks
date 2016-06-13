@@ -21,6 +21,9 @@ Dependencies
 
    sudo pip install -r requirements.txt
 
+if you are using apache , install mod_wsgi
+::
+   sudo apt-get -y install libapache2-mod-wsgi
 
 Setup
 =====
@@ -115,11 +118,13 @@ VirtualHost file:
 
         # Handle Github webhook
         <Directory "/var/www/site.com/my/python-github-webhooks">
-            Order deny,allow
-            Allow from all
+            #Order deny,allow
+            #Allow from all
+            Require all granted
         </Directory>
         WSGIScriptAlias /webhooks /var/www/site.com/my/python-github-webhooks/webhooks.py
-
+        # flask doesnt handle trailing slash very well
+        WSGIScriptAlias /webhooks/ /home/vagrant/git/python-github-webhooks/webhooks.py
     </VirtualHost>
 
 You can now add that URL to your Github repository settings:
