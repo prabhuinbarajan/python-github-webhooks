@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+# Python Example for Python GitHub Webhooks
+# File: push-myrepo-master
+
+import sys
+import json
+import requests
+with open(sys.argv[1], 'r') as jsf:
+  payload = json.loads(jsf.read())
+
+### Do something with the payload
+name = payload['repository']['name']
+giturl = payload['repository']['url']
+branch =  payload['ref']
+commit = payload["after"]
+host=sys.argv[3]
+#commit = ""
+st2_secret_key=sys.argv[4]
+print "git push  repo %s url %s branch %s commit %s " % (name , giturl, branch , commit)
+task = {"repo": name , "giturl": giturl, "branch": branch , "commit":commit };
+resp = requests.post('http://'+host + '/v1/webhooks/sample?st2-api-key='+st2_secret_key, data=json.dumps(task),headers={'Content-Type':'application/json'}) #, 'X-Auth-Token': secret_key})
+if resp.status_code/100 != 2:
+    raise Exception('POST /v1/webhooks/sample {}'.format(resp.status_code))
+
+
+
+outfile = '/tmp/hook-{}.log'.format(name)
+
+with open(outfile, 'w') as f:
+    f.write("git push  repo %s url %s branch %s commit %s host %s response %s\n" % (name , giturl, branch , commit , host, resp.status_code))
+#    f.write(json.dumps(payload))
