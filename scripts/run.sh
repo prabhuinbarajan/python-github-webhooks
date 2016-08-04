@@ -1,5 +1,5 @@
 #!/bin/bash
-#docker build -t githook -f Dockerfile-wsgi .
+docker rm -f qube_githook
 home_dir=`pwd`
 docker run -d --name qube_githook \
       -v $home_dir/hooks:/app/hooks \
