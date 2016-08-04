@@ -26,6 +26,7 @@ print "git push  repo %s url %s branch %s commit %s " % (name , giturl, branch ,
 
 outfile = '/tmp/hook-{}.log'.format(name)
 
-with open(outfile, 'w') as f:
-    f.write("git push  repo %s url %s branch %s commit %s host %s response %s\n" % (name , giturl, branch , commit , host, resp.status_code))
+with open(outfile, 'w') as f
+    f.write("git push  repo %s url %s branch %s commit %s host %s response %s\n" % (name , giturl, branch , commit , host))
+#    f.write("git push  repo %s url %s branch %s commit %s host %s response %s\n" % (name , giturl, branch , commit , host, resp.status_code))
 #    f.write(json.dumps(payload))
