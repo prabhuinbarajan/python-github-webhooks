@@ -15,7 +15,7 @@ spec:
       namespace: production
     spec:
       containers:
-      - name: landingpage
+      - name: gitlistener
         image: gcr.io/qubeship/gitlistener:latest
         ports:
         - containerPort: 80
