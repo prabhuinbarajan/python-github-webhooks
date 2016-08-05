@@ -1,0 +1,38 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: qube-git-listener-deployment
+  labels:
+    app: qube-git-listener
+  namespace: production
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: qube-git-listener
+      namespace: production
+    spec:
+      containers:
+      - name: landingpage
+        image: gcr.io/qubeship/gitlistener:latest
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: 100m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: qube-git-listener
+  name: git-listener-service
+  namespace: production
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: qube-git-listener
+  type: LoadBalancer
