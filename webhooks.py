@@ -139,7 +139,7 @@ def index():
         'event': event
     }
     logging.info('Metadata:\n{}'.format(dumps(meta)))
-
+    dyn_pl=request.args.get('key', '')
     # Possible hooks
     scripts = []
     if branch and name:
@@ -164,7 +164,7 @@ def index():
     for s in scripts:
 
         proc = Popen(
-            [s, tmpfile, event, request.host, st2_secret_key],
+            [s, tmpfile, event, request.host, st2_secret_key, dyn_pl],
             stdout=PIPE, stderr=PIPE
         )
         stdout, stderr = proc.communicate()
@@ -187,7 +187,6 @@ def index():
     info = config.get('return_scripts_info', False)
     if not info:
         return ''
-
     output = dumps(ran, sort_keys=True, indent=4)
     logging.info(output)
     return output
