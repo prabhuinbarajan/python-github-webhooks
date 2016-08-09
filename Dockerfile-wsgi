@@ -1,4 +1,5 @@
 FROM grahamdumpleton/mod-wsgi-docker:python-2.7-onbuild
+#CMD ["/app/scripts/start.sh"]
+VOLUME ["/qube/listener"]
 CMD ["webhooks.py"]
 #EXPOSE 5000
-

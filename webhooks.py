@@ -67,7 +67,8 @@ def index():
 
     # Enforce secret
     secret = config.get('enforce_secret', '')
-    st2_secret_key=config.get('st2_secret_key','')
+    qube_secret_key=config.get('qube_secret_key','')
+    qube_url=config.get('qube_url','')
     if secret:
         # Only SHA1 is supported
         header_signature = request.headers.get('X-Hub-Signature')
@@ -106,6 +107,7 @@ def index():
     # Determining the branch is tricky, as it only appears for certain event
     # types an at different levels
     branch = None
+    tag = None
     try:
         # Case 1: a ref_type indicates the type of ref.
         # This true for create and delete events.
@@ -124,6 +126,9 @@ def index():
             # Push events provide a full Git ref in 'ref' and not a 'ref_type'.
             branch = payload['ref'].split('/')[2]
 
+        elif event in ['release']:
+            tag = payload['release']['tag_name']
+
     except KeyError:
         # If the payload structure isn't what we expect, we'll live without
         # the branch name
@@ -136,7 +141,8 @@ def index():
     meta = {
         'name': name,
         'branch': branch,
-        'event': event
+        'event': event,
+        'tag': tag
     }
     logging.info('Metadata:\n{}'.format(dumps(meta)))
     dyn_pl=request.args.get('key', '')
@@ -146,6 +152,8 @@ def index():
         scripts.append(join(hooks, '{event}-{name}-{branch}'.format(**meta)))
     if name:
         scripts.append(join(hooks, '{event}-{name}'.format(**meta)))
+    if tag:
+        scripts.append(join(hooks, '{event}-{name}-{tag}'.format(**meta)))
     scripts.append(join(hooks, '{event}'.format(**meta)))
     scripts.append(join(hooks, 'all'))
 
@@ -164,7 +172,7 @@ def index():
     for s in scripts:
 
         proc = Popen(
-            [s, tmpfile, event, request.host, st2_secret_key, dyn_pl],
+            [s, tmpfile, event, request.host, qube_secret_key, qube_url],
             stdout=PIPE, stderr=PIPE
         )
         stdout, stderr = proc.communicate()
