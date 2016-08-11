@@ -18,7 +18,7 @@ host=sys.argv[3]
 qube_secret_key=sys.argv[4]
 qube_url=sys.argv[5]
 print "git push  repo %s url %s branch %s commit %s " % (name , giturl, branch , commit)
-task = {"repo": name , "giturl": giturl, "branch": branch , "commit":commit };
+task = {"repo": name , "giturl": giturl, "branch": branch , "commit": commit, "event": "push" };
 resp = requests.post(qube_url + '/qubeship_ci_git?st2-api-key='+qube_secret_key, data=json.dumps(task),headers={'Content-Type':'application/json'}, verify=False) #, 'X-Auth-Token': secret_key})
 if resp.status_code/100 != 2:
     raise Exception('POST /v1/webhooks/sample {}'.format(resp.status_code))

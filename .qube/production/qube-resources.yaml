@@ -1,0 +1,40 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: qube-git-listener-deployment
+  labels:
+    app: qube-git-listener
+  namespace: platform
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: qube-git-listener
+      namespace: platform
+    spec:
+      containers:
+      - name: qube-git-listener
+        image: gcr.io/qubeship/qube-git-listener:latest
+        env:
+          - name: QUBE_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: qube-git-listener-config
+                key: listener.api.key
+          - name: QUBE_URL
+            value: https://platform.qubeship.io/api/v1/webhooks/
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: 100m
+        volumeMounts:
+            - name: qube-git-listener-config-volume
+              mountPath: /secrets/gitlistener
+              readOnly: true
+      volumes:
+        - name: qube-git-listener-config-volume
+          secret:
+            secretName: qube-git-listener-config

@@ -24,6 +24,7 @@ from hashlib import sha1
 from json import loads, dumps
 from subprocess import Popen, PIPE
 from tempfile import mkstemp
+import os
 from os import access, X_OK, remove, fdopen
 from os.path import isfile, abspath, normpath, dirname, join, basename
 
@@ -67,8 +68,13 @@ def index():
 
     # Enforce secret
     secret = config.get('enforce_secret', '')
-    qube_secret_key=config.get('qube_secret_key','')
-    qube_url=config.get('qube_url','')
+    qube_secret_key_def=config.get('qube_secret_key','')
+    qube_secret_key= os.getenv('QUBE_SECRET_KEY', qube_secret_key_def)
+    qube_url_def=config.get('qube_url','')
+    qube_url= os.getenv('QUBE_URL', qube_url_def)
+    #print qube_secret_key, qube_secret_key_def
+    #print qube_url, qube_url_def
+
     if secret:
         # Only SHA1 is supported
         header_signature = request.headers.get('X-Hub-Signature')

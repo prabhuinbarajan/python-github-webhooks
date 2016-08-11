@@ -2,6 +2,6 @@
     "github_ips_only": false,
     "enforce_secret": "",
     "return_scripts_info": true,
-    "qube_secret_key": "NDI4ZGZmN2I4MTBhODIzMzk2NTUzYzVlNGViNDE3MTc1NDU0N2ZmY2RkZWY3NmRmN2ZmZjQxYWE2NjM1ODRkYw",
+    "qube_secret_key": "ZTBmMjIxYTVhNmE1YWU0ZTE2Mjk2MTczY2NkYmJjMjBiZjhhNGZhYzE5M2M1ZmExMGU3NDIzZWY3MWZjMTVlOQ",
     "qube_url": "https://192.168.99.100:9443/api/v1/webhooks/"
 }
