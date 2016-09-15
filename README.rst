@@ -25,8 +25,8 @@ if you are using apache , install mod_wsgi
 ::
 if you are on ubuntu/debian: run
    sudo apt-get -y install libapache2-mod-wsgi
-but if you are on mac: 
-   run
+but if you are on mac, instead run: 
+   
    brew install homebrew/apache/mod_wsgi    
  
    sudo vi /etc/apache2/httpd.conf
