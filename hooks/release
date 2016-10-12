@@ -10,6 +10,7 @@ with open(sys.argv[1], 'r') as jsf:
 
 ### Do something with the payloadx	
 name = payload['repository']['name']
+full_name = payload['repository']['full_name']
 giturl = payload['repository']['clone_url']
 tag =  payload['release']['tag_name']
 host=sys.argv[3]
@@ -17,7 +18,7 @@ host=sys.argv[3]
 qube_secret_key=sys.argv[4]
 qube_url=sys.argv[5]
 print "git release repo %s url %s tag %s" % (name , giturl, tag)
-task = { "repo": name , "giturl": giturl, "tag": tag, "event": "release" };
+task = { "repo": name, "full_name": full_name, "giturl": giturl, "tag": tag, "event": "release" };
 resp = requests.post(qube_url + '/qubeship_ci_git?st2-api-key='+qube_secret_key, data=json.dumps(task),headers={'Content-Type':'application/json'}, verify=False) #, 'X-Auth-Token': secret_key})
 if resp.status_code/100 != 2:
     raise Exception('POST /v1/webhooks/sample {}'.format(resp.status_code))
@@ -31,4 +32,4 @@ if resp.status_code/100 != 2:
 outfile = '/tmp/hook1-{}.log'.format(name)
 
 with open(outfile, 'a') as f:
-	f.write("git release repo %s url %s tag %s host %s\n" % (name, giturl, tag, host))
+	f.write("git release repo %s full_name %s url %s tag %s host %s\n" % (name, full_name, giturl, tag, host))
