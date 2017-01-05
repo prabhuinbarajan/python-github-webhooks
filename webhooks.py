@@ -16,6 +16,7 @@
 # under the License.
 
 import logging
+import urlparse
 from sys import stderr, hexversion
 logging.basicConfig(stream=stderr)
 
@@ -72,6 +73,7 @@ def index():
     qube_secret_key= os.getenv('QUBE_SECRET_KEY', qube_secret_key_def)
     qube_url_def=config.get('qube_url','')
     qube_url= os.getenv('QUBE_URL', qube_url_def)
+    qube_proj_id=urlparse.parse_qs(urlparse.urlparse(request.url).query)['qube_proj_id'][0]
     #print qube_secret_key, qube_secret_key_def
     #print qube_url, qube_url_def
 
@@ -178,7 +180,7 @@ def index():
     for s in scripts:
 
         proc = Popen(
-            [s, tmpfile, event, request.host, qube_secret_key, qube_url],
+            [s, tmpfile, event, request.host, qube_secret_key, qube_url,qube_proj_id],
             stdout=PIPE, stderr=PIPE
         )
         stdout, stderr = proc.communicate()
