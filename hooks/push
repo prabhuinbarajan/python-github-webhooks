@@ -19,8 +19,10 @@ host=sys.argv[3]
 qube_secret_key=sys.argv[4]
 qube_url=sys.argv[5]
 qube_proj_id=sys.argv[6]
+qube_tenant_id=sys.argv[7]
+qube_tenant_dns_prefix=sys.argv[8]
 print "git push  repo %s url %s branch %s commit %s qube_proj_id %s" % (name , giturl, branch , commit, qube_proj_id)
-task = {"repo": name, "full_name": full_name, "giturl": giturl, "branch": branch , "commit": commit, "event": "push" ,"qube_proj_id":qube_proj_id};
+task = {"repo": name, "full_name": full_name, "giturl": giturl, "branch": branch , "commit": commit, "event": "push" , "qube_proj_id": qube_proj_id, "qube_tenant_id": qube_tenant_id, "qube_tenant_dns_prefix": qube_tenant_dns_prefix};
 resp = requests.post(qube_url + '/qubeship_ci_git?st2-api-key='+qube_secret_key, data=json.dumps(task),headers={'Content-Type':'application/json'}, verify=False) #, 'X-Auth-Token': secret_key})
 if resp.status_code/100 != 2:
     raise Exception('POST /v1/webhooks/sample {}'.format(resp.status_code))
@@ -30,6 +32,6 @@ if resp.status_code/100 != 2:
 outfile = '/tmp/hook-{}.log'.format(name)
 
 with open(outfile, 'a') as f:
-    f.write("git push  repo %s full_name %s url %s branch %s commit %s host %s statusCode %s qube_proj_id %s\n" % (name, full_name, giturl, branch , commit , host, resp.status_code,qube_proj_id))
+    f.write("git push  repo %s full_name %s url %s branch %s commit %s host %s statusCode %s qube_proj_id %s qube_tenant_id %s qube_tenant_dns_prefix %s\n" % (name, full_name, giturl, branch , commit , host, resp.status_code, qube_proj_id, qube_tenant_id, qube_tenant_dns_prefix))
 #    f.write("git push  repo %s url %s branch %s commit %s host %s response %s\n" % (name , giturl, branch , commit , host, resp.status_code))
 #    f.write(json.dumps(payload))

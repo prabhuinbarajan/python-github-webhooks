@@ -74,6 +74,8 @@ def index():
     qube_url_def=config.get('qube_url','')
     qube_url= os.getenv('QUBE_URL', qube_url_def)
     qube_proj_id=urlparse.parse_qs(urlparse.urlparse(request.url).query)['qube_proj_id'][0]
+    qube_tenant_id=urlparse.parse_qs(urlparse.urlparse(request.url).query)['qube_tenant_id'][0]
+    qube_tenant_dns_prefix='ca'
     #print qube_secret_key, qube_secret_key_def
     #print qube_url, qube_url_def
 
@@ -180,8 +182,8 @@ def index():
     for s in scripts:
 
         proc = Popen(
-            [s, tmpfile, event, request.host, qube_secret_key, qube_url,qube_proj_id],
-            stdout=PIPE, stderr=PIPE
+            [s, tmpfile, event, request.host, qube_secret_key, qube_url,
+             qube_proj_id, qube_tenant_id, qube_tenant_dns_prefix], stdout=PIPE, stderr=PIPE
         )
         stdout, stderr = proc.communicate()
 
