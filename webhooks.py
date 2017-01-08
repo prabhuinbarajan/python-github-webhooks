@@ -21,6 +21,8 @@ from sys import stderr, hexversion
 logging.basicConfig(stream=stderr)
 
 import hmac
+import hvac
+
 from hashlib import sha1
 from json import loads, dumps
 from subprocess import Popen, PIPE
@@ -35,6 +37,23 @@ from flask import Flask, request, abort
 
 
 application = Flask(__name__)
+
+
+
+
+def get_qube_platform_secret_from_vault(vault_addr, vault_token, environment_type, environment_id ):
+    access_token = ""
+    if vault_token and environment_type:
+        client = hvac.Client(url=vault_addr, token=vault_token)
+        vault_path="secret/resources/qubeship/"+environment_type;
+        if environment_id:
+            vault_path+="/"+environment_id
+        full_vault_path= vault_path + "/st2_api_key"
+        vault_result = client.read(full_vault_path)
+        secret = vault_result["data"]["value"]
+
+    return secret
+
 
 
 @application.route('/', methods=['GET', 'POST'],strict_slashes=None)
@@ -69,13 +88,23 @@ def index():
 
     # Enforce secret
     secret = config.get('enforce_secret', '')
-    qube_secret_key_def=config.get('qube_secret_key','')
-    qube_secret_key= os.getenv('QUBE_SECRET_KEY', qube_secret_key_def)
+    environment_id=os.getenv('ENV_ID', '')
+    environment_type=os.getenv('ENV_TYPE','')
+    vault_addr=os.getenv('VAULT_ADDR','')
+    vault_token=os.getenv('VAULT_TOKEN','')
+    qube_secret_key_from_vault=
+        get_qube_platform_secret_from_vault(vault_addr, vault_token, environment_type, environment_id)
+    qube_secret_key_def=qube_secret_key_from_vault
+    #config.get('qube_secret_key',qube_secret_key_from_vault)
+    qube_secret_key_env= os.getenv('QUBE_SECRET_KEY', qube_secret_key_def)
+
+
     qube_url_def=config.get('qube_url','')
     qube_url= os.getenv('QUBE_URL', qube_url_def)
     qube_proj_id=urlparse.parse_qs(urlparse.urlparse(request.url).query)['qube_proj_id'][0]
     qube_tenant_id=urlparse.parse_qs(urlparse.urlparse(request.url).query)['qube_tenant_id'][0]
-    qube_tenant_dns_prefix='ca'
+    qube_tenant_dns_prefix=urlparse.parse_qs(urlparse.urlparse(request.url).query)['qube_dns_prefix'][0]
+    logging.info("qube_secret_key_env:  {}", qube_secret_key_env)
     #print qube_secret_key, qube_secret_key_def
     #print qube_url, qube_url_def
 

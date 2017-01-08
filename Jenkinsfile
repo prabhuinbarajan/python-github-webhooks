@@ -4,6 +4,7 @@ node {
   def imgName = "qubeship/${imageBaseName}${suffix}"
   def dockerFileName = "Dockerfile-wsgi${suffix}"
 
+
   println (imgName + ":" + dockerFileName)
   checkout poll:false,scm: [
           $class: 'GitSCM',
