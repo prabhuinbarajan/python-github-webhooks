@@ -37,7 +37,10 @@ from flask import Flask, request, abort
 
 
 application = Flask(__name__)
-
+DEFAULT_HOST = os.environ['DEFAULT_LISTENER_HOST']
+DEFAULT_PORT = int(os.environ.get('DEFAULT_LISTENER_PORT', '5001'))
+DEBUG = os.environ.get('DEBUG', 'False') \
+    in ("yes", "y", "true", "True", "t", "1")
 
 
 
@@ -240,4 +243,7 @@ def index():
 
 
 if __name__ == '__main__':
-    application.run(debug=True, host='0.0.0.0')
+    app.run(debug=DEBUG,
+        host=DEFAULT_HOST,
+        port=DEFAULT_PORT)
+    
