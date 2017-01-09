@@ -17,6 +17,14 @@
 
 import logging
 import urlparse
+
+
+if sys.version_info < (3, 0):
+    from urlparse import urlparse,parse_qs
+else:
+    from urllib.parse import urlparse, parse_qs  # noqa: F401
+
+
 from sys import stderr, hexversion
 logging.basicConfig(stream=stderr)
 
@@ -95,8 +103,8 @@ def index():
     environment_type=os.getenv('ENV_TYPE','')
     vault_addr=os.getenv('VAULT_ADDR','')
     vault_token=os.getenv('VAULT_TOKEN','')
-    qube_secret_key_from_vault=
-        get_qube_platform_secret_from_vault(vault_addr, vault_token, environment_type, environment_id)
+    qube_secret_key_from_vault=get_qube_platform_secret_from_vault(
+        vault_addr, vault_token, environment_type, environment_id)
     qube_secret_key_def=qube_secret_key_from_vault
     #config.get('qube_secret_key',qube_secret_key_from_vault)
     qube_secret_key_env= os.getenv('QUBE_SECRET_KEY', qube_secret_key_def)
@@ -104,9 +112,11 @@ def index():
 
     qube_url_def=config.get('qube_url','')
     qube_url= os.getenv('QUBE_URL', qube_url_def)
-    qube_proj_id=urlparse.parse_qs(urlparse.urlparse(request.url).query)['qube_proj_id'][0]
-    qube_tenant_id=urlparse.parse_qs(urlparse.urlparse(request.url).query)['qube_tenant_id'][0]
-    qube_tenant_dns_prefix=urlparse.parse_qs(urlparse.urlparse(request.url).query)['qube_dns_prefix'][0]
+    query_parts=parse_qs(urlparse(request.url).query)
+    qube_project_id=query_parts['qube_project_id'][0]
+    qube_tenant_id=query_parts['qube_tenant_id'][0]
+    qube_org_id=query_parts['qube_org_id'][0]
+    qube_tenant_dns_prefix=query_parts['qube_dns_prefix'][0]
     logging.info("qube_secret_key_env:  {}", qube_secret_key_env)
     #print qube_secret_key, qube_secret_key_def
     #print qube_url, qube_url_def
@@ -215,7 +225,7 @@ def index():
 
         proc = Popen(
             [s, tmpfile, event, request.host, qube_secret_key, qube_url,
-             qube_proj_id, qube_tenant_id, qube_tenant_dns_prefix], stdout=PIPE, stderr=PIPE
+             qube_project_id, qube_tenant_id, qube_tenant_dns_prefix,qube_org_id], stdout=PIPE, stderr=PIPE
         )
         stdout, stderr = proc.communicate()
 
