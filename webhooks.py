@@ -114,7 +114,7 @@ def index():
     qube_project_id=query_parts['qube_proj_id'][0]
     qube_tenant_id=query_parts['qube_tenant_id'][0]
     qube_org_id=query_parts['qube_org_id'][0]
-    qube_tenant_dns_prefix=query_parts['qube_dns_prefix'][0]
+    qube_tenant_dns_prefix=query_parts['qube_dns_prefix'][0] if 'qube_dns_prefix' in query_parts else ""
     logging.info("qube_secret_key_env:  {}", qube_secret_key_env)
     #print qube_secret_key, qube_secret_key_def
     #print qube_url, qube_url_def
