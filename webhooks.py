@@ -54,12 +54,24 @@ def get_qube_platform_secret_from_vault(vault_addr, vault_token, environment_typ
     access_token = ""
     if vault_token and environment_type:
         client = hvac.Client(url=vault_addr, token=vault_token)
-        vault_path="secret/resources/qubeship/"+environment_type;
-        if environment_id:
-            vault_path+="/"+environment_id
-        full_vault_path= vault_path + "/st2_api_key"
-        vault_result = client.read(full_vault_path)
-        secret = vault_result["data"]["value"]
+        env_type_vault_path="secret/resources/qubeship/"+environment_type;
+        env_type_secret = ""
+        try:
+            env_type_vault_result = client.read(env_type_vault_path+ "/st2_api_key")
+            env_type_secret = env_type_vault_result["data"]["value"]
+        except ex:
+            logging.info("error reading vault key from path:  {} {} ",env_type_vault_path+ "/st2_api_key",  ex)
+            pass
+        env_id_secret = ""
+        try:
+            if environment_id:
+                env_id_vault_path=env_type_vault_path + "/"+environment_id
+                env_id_vault_result = client.read(env_id_vault_path + "/st2_api_key")
+                env_id_secret = env_type_vault_result["data"]["value"]
+        except ex:
+            logging.info("error reading vault key from path:  {} {} ",env_id_vault_path+ "/st2_api_key",  ex)
+            pass
+        secret = env_type_secret if not env_type_secret else env_id_secret
 
     return secret
 
