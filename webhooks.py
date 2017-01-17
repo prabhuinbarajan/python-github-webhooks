@@ -14,16 +14,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
+import sys
 import logging
 import urlparse
-
 
 if sys.version_info < (3, 0):
     from urlparse import urlparse,parse_qs
 else:
     from urllib.parse import urlparse, parse_qs  # noqa: F401
-
 
 from sys import stderr, hexversion
 logging.basicConfig(stream=stderr)
@@ -125,7 +123,7 @@ def index():
     qube_url_def=config.get('qube_url','')
     qube_url= os.getenv('QUBE_URL', qube_url_def)
     query_parts=parse_qs(urlparse(request.url).query)
-    qube_project_id=query_parts['qube_project_id'][0]
+    qube_project_id=query_parts['qube_proj_id'][0]
     qube_tenant_id=query_parts['qube_tenant_id'][0]
     qube_org_id=query_parts['qube_org_id'][0]
     qube_tenant_dns_prefix=query_parts['qube_dns_prefix'][0]
@@ -236,7 +234,7 @@ def index():
     for s in scripts:
 
         proc = Popen(
-            [s, tmpfile, event, request.host, qube_secret_key, qube_url,
+            [s, tmpfile, event, request.host, qube_secret_key_env, qube_url,
              qube_project_id, qube_tenant_id, qube_tenant_dns_prefix,qube_org_id], stdout=PIPE, stderr=PIPE
         )
         stdout, stderr = proc.communicate()
