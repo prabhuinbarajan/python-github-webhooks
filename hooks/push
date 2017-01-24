@@ -23,6 +23,9 @@ qube_tenant_id=sys.argv[7]
 qube_tenant_dns_prefix=sys.argv[8]
 qube_org_id=sys.argv[9]
 
+if not qube_tenant_dns_prefix:
+  qube_tenant_dns_prefix = ''
+
 print "git push  repo %s url %s branch %s commit %s qube_proj_id %s" % (name , giturl, branch , commit, qube_proj_id)
 task = {
   "repo": name, 
@@ -34,7 +37,9 @@ task = {
   "qube_proj_id": qube_proj_id, 
   "qube_tenant_id": qube_tenant_id, 
   "qube_tenant_dns_prefix": qube_tenant_dns_prefix,
-  "qube_org_id": qube_org_id};
+  "qube_org_id": qube_org_id
+}
+print json.dumps(task)
 resp = requests.post(qube_url + '/qubeship_ci_git?st2-api-key='+qube_secret_key, data=json.dumps(task),headers={'Content-Type':'application/json'}, verify=False) #, 'X-Auth-Token': secret_key})
 if resp.status_code/100 != 2:
     raise Exception('POST /v1/webhooks/sample {}'.format(resp.status_code))
