@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: qube-git-listener
-        image: %image%
+        image: gcr.io/qubeship/qube-git-listener:latest
         env:
           - name: QUBE_URL
             value: https://platform.qubeship.io/api/v1/webhooks/

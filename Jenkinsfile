@@ -32,8 +32,6 @@ node {
     'qubeship-prod-k8s2', variable: 'TOKEN']]) {
         sh '''
         set +x +e
-        sed -ibak "s/%image%/$imgName:${imageVersion}/g" .qube/production/qube-resources.yaml
-        cat .qube/production/qube-resources.yaml
         kubectl apply -f .qube/services/qube-services.yaml --record --token $TOKEN --namespace platform --server=https://104.198.6.255  --insecure-skip-tls-verify=true
         kubectl apply -f .qube/production/qube-resources.yaml --record --token $TOKEN --namespace platform --server=https://104.198.6.255  --insecure-skip-tls-verify=true
         '''
