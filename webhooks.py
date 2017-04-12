@@ -235,11 +235,8 @@ def index():
     ran = {}
     for s in scripts:
 
-        proc = Popen(
-            [s, tmpfile, event, request.host, qube_secret_key_env, qube_url,
-             qube_project_id, qube_tenant_id, qube_tenant_dns_prefix,
-             qube_org_id], stdout=PIPE, stderr=PIPE
-        )
+        proc = Popen([s, tmpfile, event, request.host, qube_secret_key_env, qube_url, qube_project_id, qube_tenant_id, qube_tenant_dns_prefix, qube_org_id], stdout=PIPE, stderr=PIPE)
+
         stdout, stderr = proc.communicate()
 
         ran[basename(s)] = {
