@@ -28,18 +28,18 @@ node {
        image.push()
        image.push("latest")
   }  
-    withCredentials([[$class: 'StringBinding',credentialsId:
+  withCredentials([[$class: 'StringBinding',credentialsId:
     'qubeship-prod-k8s2', variable: 'TOKEN']]) {
         sh '''
         set +x +e
         kubectl apply -f .qube/services/qube-services.yaml --record --token
-        $TOKEN
-        --namespace qube-services --server=https://104.198.6.255  --insecure-skip-tls-verify=true
-        kubectl apply -f .qube/production/qube-resources.yaml --record --token
-        $TOKEN
-        --namespace qube-services --server=https://104.198.6.255  --insecure-skip-tls-verify=true
+        $TOKEN --namespace qube-services --server=https://104.198.6
+        .255  --insecure-skip-tls-verify=true
+        kubectl apply -f .qube/production/qube-resources.yaml --record
+        --token $TOKEN --namespace qube-services --server=https://104.198.6
+        .255  --insecure-skip-tls-verify=true
         '''
-    }
+   }
 
 
 }
