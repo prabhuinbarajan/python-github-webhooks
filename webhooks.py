@@ -49,13 +49,14 @@ DEBUG = os.environ.get('DEBUG', 'False') \
     in ("yes", "y", "true", "True", "t", "1")
 
 
-
 def get_qube_platform_secret_from_vault(vault_addr, vault_token, environment_type, environment_id ):
     access_token = ""
+    secret = None
     if vault_token and environment_type:
         client = hvac.Client(url=vault_addr, token=vault_token)
-        env_type_vault_path="secret/resources/qubeship/"+environment_type;
+        env_type_vault_path="secret/resources/qubeship/"+environment_type
         env_type_secret = ""
+        env_type_vault_result = {}
         try:
             env_type_vault_result = client.read(env_type_vault_path+ "/st2_api_key")
             env_type_secret = env_type_vault_result["data"]["value"]
@@ -68,13 +69,26 @@ def get_qube_platform_secret_from_vault(vault_addr, vault_token, environment_typ
                 env_id_vault_path=env_type_vault_path + "/"+environment_id
                 env_id_vault_result = client.read(env_id_vault_path + "/st2_api_key")
                 env_id_secret = env_type_vault_result["data"]["value"]
-        except ex:
-            logging.info("error reading vault key from path:  {} {} ",env_id_vault_path+ "/st2_api_key",  ex)
+        except Exception as ex:
+            logging.info("error reading vault key from path:  {} {} ",
+                         env_id_vault_path+ "/st2_api_key",  ex)
             pass
         secret = env_type_secret if not env_type_secret else env_id_secret
 
     return secret
 
+
+def init_from_env():
+    environment_id = os.getenv('ENV_ID', '')
+    environment_type = os.getenv('ENV_TYPE', '')
+    vault_addr = os.getenv('VAULT_ADDR', '')
+    vault_token = os.getenv('VAULT_TOKEN', '')
+    qube_secret_key_from_vault = get_qube_platform_secret_from_vault(
+        vault_addr, vault_token, environment_type, environment_id)
+    secret_key_env = os.getenv('QUBE_SECRET_KEY', qube_secret_key_from_vault)
+    return secret_key_env
+
+qube_secret_key_env = init_from_env()
 
 
 @application.route('/', methods=['GET', 'POST'],strict_slashes=None)
@@ -109,27 +123,15 @@ def index():
 
     # Enforce secret
     secret = config.get('enforce_secret', '')
-    environment_id=os.getenv('ENV_ID', '')
-    environment_type=os.getenv('ENV_TYPE','')
-    vault_addr=os.getenv('VAULT_ADDR','')
-    vault_token=os.getenv('VAULT_TOKEN','')
-    qube_secret_key_from_vault=get_qube_platform_secret_from_vault(
-        vault_addr, vault_token, environment_type, environment_id)
-    qube_secret_key_def=qube_secret_key_from_vault
-    #config.get('qube_secret_key',qube_secret_key_from_vault)
-    qube_secret_key_env= os.getenv('QUBE_SECRET_KEY', qube_secret_key_def)
-
-
-    qube_url_def=config.get('qube_url','')
-    qube_url= os.getenv('QUBE_URL', qube_url_def)
-    query_parts=parse_qs(urlparse(request.url).query)
-    qube_project_id=query_parts['qube_proj_id'][0]
-    qube_tenant_id=query_parts['qube_tenant_id'][0]
-    qube_org_id=query_parts['qube_org_id'][0]
-    qube_tenant_dns_prefix=query_parts['qube_dns_prefix'][0] if 'qube_dns_prefix' in query_parts else ""
+    qube_url_def = config.get('qube_url','')
+    qube_url = os.getenv('QUBE_URL', qube_url_def)
+    query_parts = parse_qs(urlparse(request.url).query)
+    qube_project_id = query_parts['qube_proj_id'][0]
+    qube_tenant_id = query_parts['qube_tenant_id'][0]
+    qube_org_id = query_parts['qube_org_id'][0]
+    qube_tenant_dns_prefix = query_parts['qube_dns_prefix'][0] if \
+        'qube_dns_prefix' in query_parts else ""
     logging.info("qube_secret_key_env:  {}", qube_secret_key_env)
-    #print qube_secret_key, qube_secret_key_def
-    #print qube_url, qube_url_def
 
     if secret:
         # Only SHA1 is supported
@@ -235,7 +237,8 @@ def index():
 
         proc = Popen(
             [s, tmpfile, event, request.host, qube_secret_key_env, qube_url,
-             qube_project_id, qube_tenant_id, qube_tenant_dns_prefix,qube_org_id], stdout=PIPE, stderr=PIPE
+             qube_project_id, qube_tenant_id, qube_tenant_dns_prefix,
+             qube_org_id], stdout=PIPE, stderr=PIPE
         )
         stdout, stderr = proc.communicate()
 
@@ -266,4 +269,3 @@ if __name__ == '__main__':
     app.run(debug=DEBUG,
         host=DEFAULT_HOST,
         port=DEFAULT_PORT)
-    
