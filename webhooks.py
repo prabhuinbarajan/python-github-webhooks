@@ -43,7 +43,7 @@ from flask import Flask, request, abort
 
 
 application = Flask(__name__)
-DEFAULT_HOST = os.environ['DEFAULT_LISTENER_HOST']
+DEFAULT_HOST = os.environ.get('DEFAULT_LISTENER_HOST', 'localhost')
 DEFAULT_PORT = int(os.environ.get('DEFAULT_LISTENER_PORT', '5001'))
 DEBUG = os.environ.get('DEBUG', 'False') \
     in ("yes", "y", "true", "True", "t", "1")
