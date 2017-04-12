@@ -16,12 +16,42 @@ spec:
     spec:
       containers:
       - name: qube-git-listener
-        image: gcr.io/qubeship/qube-git-listener:latest
+        image: gcr.io/qubeship/qube-git-listener:local-123
         env:
           - name: QUBE_URL
             value: https://platform.qubeship.io/api/v1/webhooks/
+          - name: ENV_ID
+            value: k8s2
+          - name: ENV_TYPE
+            value: prod
+          - name: VAULT_ADDR
+            value: https://vault.qubeship.io
+          - name: VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: qube-vault-token
+                key: vault-qubeship-k8s2.token
+          - name: CONF_SERVER_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: qube-consul-token
+                key: consul-qubeship.token
         ports:
         - containerPort: 80
         resources:
           limits:
             cpu: 100m
+        volumeMounts:
+            - name: qube-secrets-token-volume
+              mountPath: /secrets/qube_secrets
+              readOnly: true
+            - name: qube-conf-token-volume
+              mountPath: /secrets/qube_conf
+              readOnly: true
+      volumes:
+        - name: qube-secrets-token-volume
+          secret:
+            secretName: qube-vault-token
+        - name: qube-conf-token-volume
+          secret:
+            secretName: qube-consul-token

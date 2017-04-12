@@ -16,7 +16,6 @@
 # under the License.
 import sys
 import logging
-import urlparse
 
 if sys.version_info < (3, 0):
     from urlparse import urlparse,parse_qs
@@ -50,7 +49,6 @@ DEBUG = os.environ.get('DEBUG', 'False') \
 
 
 def get_qube_platform_secret_from_vault(vault_addr, vault_token, environment_type, environment_id ):
-    access_token = ""
     secret = None
     if vault_token and environment_type:
         client = hvac.Client(url=vault_addr, token=vault_token)
@@ -60,7 +58,7 @@ def get_qube_platform_secret_from_vault(vault_addr, vault_token, environment_typ
         try:
             env_type_vault_result = client.read(env_type_vault_path+ "/st2_api_key")
             env_type_secret = env_type_vault_result["data"]["value"]
-        except ex:
+        except Exception as ex:
             logging.info("error reading vault key from path:  {} {} ",env_type_vault_path+ "/st2_api_key",  ex)
             pass
         env_id_secret = ""
@@ -68,12 +66,12 @@ def get_qube_platform_secret_from_vault(vault_addr, vault_token, environment_typ
             if environment_id:
                 env_id_vault_path=env_type_vault_path + "/"+environment_id
                 env_id_vault_result = client.read(env_id_vault_path + "/st2_api_key")
-                env_id_secret = env_type_vault_result["data"]["value"]
+                env_id_secret = env_id_vault_result["data"]["value"]
         except Exception as ex:
             logging.info("error reading vault key from path:  {} {} ",
                          env_id_vault_path+ "/st2_api_key",  ex)
             pass
-        secret = env_type_secret if not env_type_secret else env_id_secret
+        secret = env_type_secret if env_type_secret else env_id_secret
 
     return secret
 
@@ -132,6 +130,7 @@ def index():
     qube_tenant_dns_prefix = query_parts['qube_dns_prefix'][0] if \
         'qube_dns_prefix' in query_parts else ""
     logging.info("qube_secret_key_env:  {}", qube_secret_key_env)
+    print("qube_secret_key_env: ", qube_secret_key_env)
 
     if secret:
         # Only SHA1 is supported
@@ -165,7 +164,7 @@ def index():
     # Gather data
     try:
         payload = loads(request.data)
-    except:
+    except Exception as ex:
         abort(400)
 
     # Determining the branch is tricky, as it only appears for certain event
@@ -263,6 +262,6 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(debug=DEBUG,
+    application.run(debug=DEBUG,
         host=DEFAULT_HOST,
         port=DEFAULT_PORT)
