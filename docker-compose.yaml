@@ -5,6 +5,9 @@ services:
     environment:
       DEFAULT_LISTENER_PORT: ${DEFAULT_LISTENER_PORT}
       CONF_SERVER_TOKEN: ${CONF_SERVER_TOKEN}
+      CONF_SERVER_ADDR: ${CONF_SERVER_ADDR}
+      VAULT_ADDR: ${VAULT_ADDR}
+      ENV_TYPE: ${ENV_TYPE}
       VAULT_TOKEN: ${VAULT_TOKEN}
       ENV_ID: ${ENV_ID}
       QUBE_URL: http://qube_platform/api/v1/webhooks/

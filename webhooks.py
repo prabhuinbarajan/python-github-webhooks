@@ -17,6 +17,8 @@
 import sys
 import logging
 
+from jenkins.config import QubeConfig
+
 if sys.version_info < (3, 0):
     from urlparse import urlparse,parse_qs
 else:
@@ -26,15 +28,10 @@ from sys import stderr, hexversion
 logging.basicConfig(stream=stderr)
 
 import hmac
-import hvac
-
 from hashlib import sha1
 from json import loads, dumps
-from subprocess import Popen, PIPE
-from tempfile import mkstemp
 import os
-from os import access, X_OK, remove, fdopen
-from os.path import isfile, abspath, normpath, dirname, join, basename
+from os.path import isfile, abspath, normpath, dirname, join
 
 import requests
 from ipaddress import ip_address, ip_network
@@ -47,49 +44,7 @@ DEFAULT_PORT = int(os.environ.get('DEFAULT_LISTENER_PORT', '5001'))
 DEBUG = os.environ.get('DEBUG', 'False') \
     in ("yes", "y", "true", "True", "t", "1")
 
-
-def get_qube_platform_secret_from_vault(vault_addr, vault_token, environment_type, environment_id ):
-    secret = None
-    if vault_token and environment_type:
-        client = hvac.Client(url=vault_addr, token=vault_token)
-        env_type_vault_path="secret/resources/qubeship/"+environment_type
-        env_type_secret = ""
-        env_type_vault_result = {}
-        try:
-            env_type_vault_result = client.read(env_type_vault_path +
-                                                "/st2_api_key")
-            env_type_secret = env_type_vault_result["data"]["value"]
-        except Exception as ex:
-            logging.info("error reading vault key from path:  {} {} ",
-                         env_type_vault_path + "/st2_api_key",  ex)
-            pass
-        env_id_secret = ""
-        try:
-            if environment_id:
-                env_id_vault_path = env_type_vault_path + "/"+environment_id
-                env_id_vault_result = client.read(env_id_vault_path +
-                                                  "/st2_api_key")
-                env_id_secret = env_id_vault_result["data"]["value"]
-        except Exception as ex:
-            logging.info("error reading vault key from path:  {} {} ",
-                         env_id_vault_path + "/st2_api_key",  ex)
-            pass
-        secret = env_type_secret if env_type_secret else env_id_secret
-
-    return secret
-
-
-def init_from_env():
-    environment_id = os.getenv('ENV_ID', '')
-    environment_type = os.getenv('ENV_TYPE', '')
-    vault_addr = os.getenv('VAULT_ADDR', '')
-    vault_token = os.getenv('VAULT_TOKEN', '')
-    qube_secret_key_from_vault = get_qube_platform_secret_from_vault(
-        vault_addr, vault_token, environment_type, environment_id)
-    secret_key_env = os.getenv('QUBE_SECRET_KEY', qube_secret_key_from_vault)
-    return secret_key_env
-
-qube_secret_key_env = init_from_env()
+qube_secret_key_env = ''
 
 
 @application.route('/', methods=['GET', 'POST'],strict_slashes=None)
@@ -165,6 +120,7 @@ def index():
         return dumps({'msg': 'pong'})
 
     # Gather data
+    payload = {}
     try:
         payload = loads(to_string(request.data))
     except Exception as ex:
@@ -210,58 +166,34 @@ def index():
         'event': event,
         'tag': tag
     }
-    logging.info('Metadata:\n{}'.format(dumps(meta)))
-    dyn_pl=request.args.get('key', '')
-    # Possible hooks
-    scripts = []
-    if branch and name:
-        scripts.append(join(hooks, '{event}-{name}-{branch}'.format(**meta)))
-    if name:
-        scripts.append(join(hooks, '{event}-{name}'.format(**meta)))
-    if tag:
-        scripts.append(join(hooks, '{event}-{name}-{tag}'.format(**meta)))
-    scripts.append(join(hooks, '{event}'.format(**meta)))
-    scripts.append(join(hooks, 'all'))
+    config = QubeConfig()
+    jenkins_job = config.server.get_job(qube_project_id)
 
-    # Check permissions
-    scripts = [s for s in scripts if isfile(s) and access(s, X_OK)]
-    if not scripts:
-        return ''
+    parameters_dict = {
+        'commithash': payload["after"]
+    }
+    qi = jenkins_job.invoke(build_params=parameters_dict, cause="git trigger",
+                           block=False)
+    #qi.block_until_building()
+    #ite_id = qi.get_build_number()
 
-    # Save payload to temporal file
-    osfd, tmpfile = mkstemp()
-    with fdopen(osfd, 'w') as pf:
-        pf.write(dumps(payload))
+    """
+    name = payload['repository']['name']
+    full_name = payload['repository']['full_name']
+    giturl = payload['repository']['url']
+    branch = payload['ref']
+    commit = payload["after"]
+    """
+    output_string= {
+        'returncode': 0,
+        'stdout': 'success',
+        'stderr': ''
+    }
 
-    # Run scripts
-    ran = {}
-    for s in scripts:
-
-        proc = Popen([s, tmpfile, event, request.host, qube_secret_key_env, qube_url, qube_project_id, qube_tenant_id, qube_tenant_dns_prefix, qube_org_id], stdout=PIPE, stderr=PIPE)
-
-        stdout, stderr = proc.communicate()
-
-        ran[basename(s)] = {
-            'returncode': proc.returncode,
-            'stdout': to_string(stdout),
-            'stderr': to_string(stderr),
-        }
-
-        # Log errors if a hook failed
-        if proc.returncode != 0:
-            logging.error('{} : {} \n{}'.format(
-                s, proc.returncode, stderr
-            ))
-
-    # Remove temporal file
-    remove(tmpfile)
-
-    info = config.get('return_scripts_info', False)
-    if not info:
-        return ''
-    output = dumps(ran, sort_keys=True, indent=4)
+    output = dumps(output_string, sort_keys=True, indent=4)
     logging.info(output)
     return output
+
 
 def to_string(input_str):
     """
