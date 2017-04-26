@@ -1,7 +1,19 @@
-#!/bin/bash
-docker rm -f qube_githook
-home_dir=`pwd`
-docker run -d --name qube_githook \
-      -v $home_dir/hooks:/app/hooks \
-      -v $home_dir/config.json:/app/config.json \
-      -p 5080:80 gcr.io/qubeship/qube-git-listener
+#!/usr/bin/env bash
+set -o allexport
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $DIR/..
+
+if [ -e .env ]; then
+	source .env
+fi
+if [ -z "$(which ngrok)" ]; then
+     echo "Please install ngrok"
+     exit -1;
+fi
+TARGET_DEFAULT=$(docker-machine ip):${DEFAULT_LISTENER_PORT}
+TARGET=${NGROK_TARGET:-$TARGET_DEFAULT}
+
+docker-compose -f docker-compose.yaml up -d --remove-orphans
+ngrok authtoken  ${NGROK_AUTH}
+ngrok http -hostname=${NGROK_HOSTNAME} ${TARGET}

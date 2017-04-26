@@ -56,20 +56,23 @@ def get_qube_platform_secret_from_vault(vault_addr, vault_token, environment_typ
         env_type_secret = ""
         env_type_vault_result = {}
         try:
-            env_type_vault_result = client.read(env_type_vault_path+ "/st2_api_key")
+            env_type_vault_result = client.read(env_type_vault_path +
+                                                "/st2_api_key")
             env_type_secret = env_type_vault_result["data"]["value"]
         except Exception as ex:
-            logging.info("error reading vault key from path:  {} {} ",env_type_vault_path+ "/st2_api_key",  ex)
+            logging.info("error reading vault key from path:  {} {} ",
+                         env_type_vault_path + "/st2_api_key",  ex)
             pass
         env_id_secret = ""
         try:
             if environment_id:
-                env_id_vault_path=env_type_vault_path + "/"+environment_id
-                env_id_vault_result = client.read(env_id_vault_path + "/st2_api_key")
+                env_id_vault_path = env_type_vault_path + "/"+environment_id
+                env_id_vault_result = client.read(env_id_vault_path +
+                                                  "/st2_api_key")
                 env_id_secret = env_id_vault_result["data"]["value"]
         except Exception as ex:
             logging.info("error reading vault key from path:  {} {} ",
-                         env_id_vault_path+ "/st2_api_key",  ex)
+                         env_id_vault_path + "/st2_api_key",  ex)
             pass
         secret = env_type_secret if env_type_secret else env_id_secret
 
@@ -163,7 +166,7 @@ def index():
 
     # Gather data
     try:
-        payload = loads(request.data)
+        payload = loads(to_string(request.data))
     except Exception as ex:
         abort(400)
 
@@ -240,8 +243,8 @@ def index():
 
         ran[basename(s)] = {
             'returncode': proc.returncode,
-            'stdout': stdout,
-            'stderr': stderr,
+            'stdout': to_string(stdout),
+            'stderr': to_string(stderr),
         }
 
         # Log errors if a hook failed
@@ -260,6 +263,17 @@ def index():
     logging.info(output)
     return output
 
+def to_string(input_str):
+    """
+    Python 3 default encoding: UTF-8
+    Python 2 default encoding: ascii
+
+    string b'STRING' is an instance of 'bytes' if py3
+    hence we need to decode it.
+    no need to decode if py2, because it's still the type of 'str'
+    """
+    return input_str.decode(sys.getdefaultencoding()) \
+        if isinstance(input_str, bytes) else str(input_str)
 
 if __name__ == '__main__':
     application.run(debug=DEBUG,

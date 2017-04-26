@@ -26,6 +26,8 @@ spec:
             value: prod
           - name: VAULT_ADDR
             value: https://vault.qubeship.io
+          - name: CI_ADDR
+            value: https://builder.qubeship.io
           - name: VAULT_TOKEN
             valueFrom:
               secretKeyRef:
