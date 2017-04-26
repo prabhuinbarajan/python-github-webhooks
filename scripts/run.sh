@@ -7,10 +7,7 @@ cd $DIR/..
 if [ -e .env ]; then
 	source .env
 fi
-if [ -z "$(which ngrok)" ]; then
-     echo "Please install ngrok"
-     exit -1;
-fi
+
 TARGET_DEFAULT=$(docker-machine ip):${DEFAULT_LISTENER_PORT}
 #TARGET_DEFAULT=$(docker ps --format '{{.Names}}' | grep
 # githubwebhooks_git_listener)
