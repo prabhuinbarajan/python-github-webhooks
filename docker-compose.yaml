@@ -15,18 +15,11 @@ services:
     ports:
       - "${DEFAULT_LISTENER_PORT}:80"
 
-#  ngrok:
-#    env_file: .env
-#    environment:
-#      NGROK_AUTH: ${NGROK_AUTH}
-#      NGROK_HOSTNAME: ${NGROK_HOSTNAME}
-#      NGROK_PROTOCOL: ${NGROK_PROTOCOL}
-#      NGROK_PORT: ${NGROK_PORT}
-#    image: wernight/ngrok
-#    command: [ngrok , http,"--authtoken", "${NGROK_AUTH}" , "--hostname",
-#    "${NGROK_HOSTNAME}",
-#    "http:${DEFAULT_LISTENER_PORT}"]
-#    ports:
-#      - "4040:4040"
-#    links:
-#      - git_listener:http
+  ngrok:
+    env_file: .env
+    image: wernight/ngrok
+    command: [ngrok,"http","--authtoken", "${NGROK_AUTH}" , "--hostname", "${NGROK_HOSTNAME}", "http:80"]
+    ports:
+      - "4040:4040"
+    links:
+      - git_listener:http
