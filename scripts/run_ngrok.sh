@@ -8,7 +8,7 @@ if [ -e .env ]; then
 	source .env
 fi
 
-TARGET_DEFAULT=$(docker-machine ip):${DEFAULT_LISTENER_PORT}
+TARGET_DEFAULT=$(docker-machine ip):${GIT_LISTENER_PORT}
 TARGET=${NGROK_TARGET:-$TARGET_DEFAULT}
 
 docker run --name ngrok --rm -it --env-file .env -p 4040:4040 wernight/ngrok \

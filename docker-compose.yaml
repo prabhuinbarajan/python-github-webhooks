@@ -3,7 +3,7 @@ services:
   git_listener:
     env_file: .env
     environment:
-      DEFAULT_LISTENER_PORT: ${DEFAULT_LISTENER_PORT}
+      DEFAULT_LISTENER_PORT: ${GIT_LISTENER_PORT}
       CONF_SERVER_TOKEN: ${CONF_SERVER_TOKEN}
       CONF_SERVER_ADDR: ${CONF_SERVER_ADDR}
       VAULT_ADDR: ${VAULT_ADDR}
@@ -13,10 +13,13 @@ services:
       QUBE_URL: http://qube_platform/api/v1/webhooks/
     image: ${GIT_LISTENER_IMAGE}:${GIT_LISTENER_VERSION}
     ports:
-      - "${DEFAULT_LISTENER_PORT}:80"
+      - "${GIT_LISTENER_PORT}:80"
 
   ngrok:
     env_file: .env
+    environment:
+      NGROK_AUTH: ${NGROK_AUTH}
+      NGROK_HOSTNAME: ${NGROK_HOSTNAME}
     image: wernight/ngrok
     command: [ngrok,"http","--authtoken", "${NGROK_AUTH}" , "--hostname", "${NGROK_HOSTNAME}", "http:80"]
     ports:
