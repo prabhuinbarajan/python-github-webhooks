@@ -24,5 +24,7 @@ services:
     command: [ngrok,"http","--authtoken", "${NGROK_AUTH}" , "--hostname", "${NGROK_HOSTNAME}", "http:80"]
     ports:
       - "4040:4040"
+    depends_on:
+      - git_listener
     links:
       - git_listener:http
