@@ -24,7 +24,6 @@ def get_qubebuilder_user_pwd(vault_addr, vault_token, environment_type,
             if env_type_vault_result:
                 env_type_user = env_type_vault_result["data"]["user"]
                 env_type_pwd = env_type_vault_result["data"]["access_token"]
-                env_type_ci_addr = env_type_vault_result["data"]["ci_addr"]
                 logging.info("located qubebuilder credentials in %".format(
                     environment_type))
             else:
@@ -46,7 +45,6 @@ def get_qubebuilder_user_pwd(vault_addr, vault_token, environment_type,
                 if env_id_vault_result:
                     env_id_user = env_id_vault_result["data"]["user"]
                     env_id_pwd = env_id_vault_result["data"]["access_token"]
-                    env_id_ci_addr = env_id_vault_result["data"]["ci_addr"]
                     logging.info("located qubebuilder credentials in %".format(
                         environment_id))
                 else:
