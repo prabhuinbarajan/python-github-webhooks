@@ -23,9 +23,9 @@ bake:
     - name: dockerhub
       prefix: qubeship
       type: dockerhub
-      tags:
+      tags: 
         - latest
-        - ${env.branch}.${env.shorthash}.${env.BUILD_NUMBER}
+        - ${env.branch}.${env.shorthash}.${env.BUILD_NUMBER}        
 test:
   skip: true
   functional:
