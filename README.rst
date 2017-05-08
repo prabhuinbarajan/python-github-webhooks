@@ -23,7 +23,16 @@ Dependencies
 
 if you are using apache , install mod_wsgi
 ::
+if you are on ubuntu/debian: run
    sudo apt-get -y install libapache2-mod-wsgi
+but if you are on mac, instead run: 
+   
+   brew install homebrew/apache/mod_wsgi    
+ 
+   sudo vi /etc/apache2/httpd.conf
+   #And add the following line to the file:
+   
+   LoadModule wsgi_module /usr/local/Cellar/mod_wsgi/4.5.6/libexec/mod_wsgi.so
 
 Setup
 =====

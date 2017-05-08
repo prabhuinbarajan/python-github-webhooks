@@ -1,0 +1,61 @@
+---
+name: qube-git-listener
+language: python
+pipeline: build_bake_test_deployment:v0.1
+security:
+  keys_loc: "conf/"
+notification:
+  type: slack
+  domain: qubeship
+  channel: qubeship
+build:
+  skip: true
+bake:
+  strategy: docker
+  script: Dockerfile
+  repositories:
+    - name: google
+      prefix: gcr.io/qubeship
+      type: gcr
+      tags: 
+        - &latest latest
+        - &kube_version ${env.branch}.${env.shorthash}.${env.BUILD_NUMBER}
+test:
+  skip: true
+  functional:
+    provider: qubeship-sg
+ports:
+  container_ports:
+    - containerPort: 3000
+      name: http
+      protocol: TCP
+  service_ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 3000
+deployment:
+  continuous_deployment: true
+  environments:
+    prod:
+      - type: qubeship_managed
+        id: "k8s2"
+        template_id: qube_qubeship_apis
+        srcRepo: google
+        tag: *kube_version
+        service_registration:
+          provider: qube_api_gateway
+          endpoint: api
+          domain: qubeship.io
+          context: /v1/auth
+
+environment_variables:
+  env:
+    - name: DEFAULT_LISTENER_HOST
+      value: "0.0.0.0"
+    - name: DEFAULT_LISTENER_PORT
+      value: "5001"
+    - name: MOD_WSGI_PROCESSES
+      value: "10"
+    - name: CI_ADDR
+      value: https://builder.qubeship.io

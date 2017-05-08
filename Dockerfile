@@ -1,14 +1,14 @@
-FROM fedora:latest
-MAINTAINER "Laurent Rineau" <laurent.rineau@cgal.org>
+FROM grahamdumpleton/mod-wsgi-docker:python-3.5
 
-RUN yum -y update
-RUN yum -y install python-pip && yum clean all
+WORKDIR /app
+COPY . /app
+ENV PYTHONPATH /app
+RUN apt-get update && apt-get install -y jq wget unzip
+RUN wget https://releases.hashicorp.com/consul/0.7.1/consul_0.7.1_linux_amd64.zip
+RUN unzip consul_0.7.1_linux_amd64.zip -d /usr/local/bin/
 
-ADD LICENSE requirements.txt webhooks.py config.json hooks /src/
+RUN mod_wsgi-docker-build
 
-RUN cd /src; pip install -r requirements.txt
-
-EXPOSE 5000
-
-WORKDIR /src
-CMD ["python", "/src/webhooks.py"]
+EXPOSE 80
+CMD ["webhooks.py"]
+ENTRYPOINT [ "./scripts/startup.sh" , "mod_wsgi-docker-start"]

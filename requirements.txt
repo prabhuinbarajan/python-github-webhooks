@@ -1,3 +1,8 @@
-Flask
-ipaddress
-requests
+Flask==0.12.1
+ipaddress==1.0.18
+requests==2.13.0
+urlparse2==1.1.1
+hvac==0.2.17
+jenkinsapi==0.3.4
+configparser==3.5.0
+colorlog==2.10.0

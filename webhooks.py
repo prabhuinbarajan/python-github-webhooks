@@ -14,18 +14,24 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
+import sys
 import logging
+
+from jenkins.config import QubeConfig
+
+if sys.version_info < (3, 0):
+    from urlparse import urlparse,parse_qs
+else:
+    from urllib.parse import urlparse, parse_qs  # noqa: F401
+
 from sys import stderr, hexversion
 logging.basicConfig(stream=stderr)
 
 import hmac
 from hashlib import sha1
 from json import loads, dumps
-from subprocess import Popen, PIPE
-from tempfile import mkstemp
-from os import access, X_OK, remove, fdopen
-from os.path import isfile, abspath, normpath, dirname, join, basename
+import os
+from os.path import isfile, abspath, normpath, dirname, join
 
 import requests
 from ipaddress import ip_address, ip_network
@@ -33,6 +39,12 @@ from flask import Flask, request, abort
 
 
 application = Flask(__name__)
+DEFAULT_HOST = os.environ.get('DEFAULT_LISTENER_HOST', '0.0.0.0')
+DEFAULT_PORT = int(os.environ.get('DEFAULT_LISTENER_PORT', '5001'))
+DEBUG = os.environ.get('DEBUG', 'False') \
+    in ("yes", "y", "true", "True", "t", "1")
+
+qube_secret_key_env = ''
 
 
 @application.route('/', methods=['GET', 'POST'],strict_slashes=None)
@@ -67,7 +79,17 @@ def index():
 
     # Enforce secret
     secret = config.get('enforce_secret', '')
-    st2_secret_key=config.get('st2_secret_key','')
+    qube_url_def = config.get('qube_url','')
+    qube_url = os.getenv('QUBE_URL', qube_url_def)
+    query_parts = parse_qs(urlparse(request.url).query)
+    qube_project_id = query_parts['qube_proj_id'][0]
+    qube_tenant_id = query_parts['qube_tenant_id'][0]
+    qube_org_id = query_parts['qube_org_id'][0]
+    qube_tenant_dns_prefix = query_parts['qube_dns_prefix'][0] if \
+        'qube_dns_prefix' in query_parts else ""
+    logging.info("qube_secret_key_env:  {}", qube_secret_key_env)
+    print("qube_secret_key_env: ", qube_secret_key_env)
+
     if secret:
         # Only SHA1 is supported
         header_signature = request.headers.get('X-Hub-Signature')
@@ -98,14 +120,16 @@ def index():
         return dumps({'msg': 'pong'})
 
     # Gather data
+    payload = {}
     try:
-        payload = loads(request.data)
-    except:
+        payload = loads(to_string(request.data))
+    except Exception as ex:
         abort(400)
 
     # Determining the branch is tricky, as it only appears for certain event
     # types an at different levels
     branch = None
+    tag = None
     try:
         # Case 1: a ref_type indicates the type of ref.
         # This true for create and delete events.
@@ -124,6 +148,9 @@ def index():
             # Push events provide a full Git ref in 'ref' and not a 'ref_type'.
             branch = payload['ref'].split('/')[2]
 
+        elif event in ['release']:
+            tag = payload['release']['tag_name']
+
     except KeyError:
         # If the payload structure isn't what we expect, we'll live without
         # the branch name
@@ -136,62 +163,51 @@ def index():
     meta = {
         'name': name,
         'branch': branch,
-        'event': event
+        'event': event,
+        'tag': tag
     }
-    logging.info('Metadata:\n{}'.format(dumps(meta)))
+    config = QubeConfig()
+    jenkins_job = config.server.get_job(qube_project_id)
 
-    # Possible hooks
-    scripts = []
-    if branch and name:
-        scripts.append(join(hooks, '{event}-{name}-{branch}'.format(**meta)))
-    if name:
-        scripts.append(join(hooks, '{event}-{name}'.format(**meta)))
-    scripts.append(join(hooks, '{event}'.format(**meta)))
-    scripts.append(join(hooks, 'all'))
+    parameters_dict = {
+        'commithash': payload["after"]
+    }
+    qi = jenkins_job.invoke(build_params=parameters_dict, cause="git trigger",
+                           block=False)
+    #qi.block_until_building()
+    #ite_id = qi.get_build_number()
 
-    # Check permissions
-    scripts = [s for s in scripts if isfile(s) and access(s, X_OK)]
-    if not scripts:
-        return ''
+    """
+    name = payload['repository']['name']
+    full_name = payload['repository']['full_name']
+    giturl = payload['repository']['url']
+    branch = payload['ref']
+    commit = payload["after"]
+    """
+    output_string= {
+        'returncode': 0,
+        'stdout': 'success',
+        'stderr': ''
+    }
 
-    # Save payload to temporal file
-    osfd, tmpfile = mkstemp()
-    with fdopen(osfd, 'w') as pf:
-        pf.write(dumps(payload))
-
-    # Run scripts
-    ran = {}
-    for s in scripts:
-
-        proc = Popen(
-            [s, tmpfile, event, request.host, st2_secret_key],
-            stdout=PIPE, stderr=PIPE
-        )
-        stdout, stderr = proc.communicate()
-
-        ran[basename(s)] = {
-            'returncode': proc.returncode,
-            'stdout': stdout,
-            'stderr': stderr,
-        }
-
-        # Log errors if a hook failed
-        if proc.returncode != 0:
-            logging.error('{} : {} \n{}'.format(
-                s, proc.returncode, stderr
-            ))
-
-    # Remove temporal file
-    remove(tmpfile)
-
-    info = config.get('return_scripts_info', False)
-    if not info:
-        return ''
-
-    output = dumps(ran, sort_keys=True, indent=4)
+    output = dumps(output_string, sort_keys=True, indent=4)
     logging.info(output)
     return output
 
 
+def to_string(input_str):
+    """
+    Python 3 default encoding: UTF-8
+    Python 2 default encoding: ascii
+
+    string b'STRING' is an instance of 'bytes' if py3
+    hence we need to decode it.
+    no need to decode if py2, because it's still the type of 'str'
+    """
+    return input_str.decode(sys.getdefaultencoding()) \
+        if isinstance(input_str, bytes) else str(input_str)
+
 if __name__ == '__main__':
-    application.run(debug=True, host='0.0.0.0')
+    application.run(debug=DEBUG,
+        host=DEFAULT_HOST,
+        port=DEFAULT_PORT)
