@@ -20,6 +20,12 @@ bake:
       tags: 
         - &latest latest
         - &kube_version ${env.branch}.${env.shorthash}.${env.BUILD_NUMBER}
+    - name: dockerhub
+      prefix: qubeship
+      type: dockerhub
+      tags: 
+        - latest
+        - ${env.branch}.${env.shorthash}.${env.BUILD_NUMBER}        
 test:
   skip: true
   functional:
